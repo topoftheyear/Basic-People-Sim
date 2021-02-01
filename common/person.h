@@ -4,6 +4,7 @@
 
 #include "chroma_texture.h"
 #include "game_object.h"
+#include "temple.h"
 
 #ifndef __PERSON_H_INCLUDED__
 #define __PERSON_H_INCLUDED__
@@ -13,7 +14,7 @@ class Person: public GameObject{
         Person();
         Person(Person*, Person*);
         
-        void update(std::list<Person>&, std::list<Food>&, int);
+        void update(std::list<Person>&, std::list<Food>&, std::list<Temple>&, int);
         void updatePosition(int, int);
         void deriveFromStats();
         int statsCombined();
@@ -23,15 +24,15 @@ class Person: public GameObject{
         std::string task;   // The task that will get carried out at the target
 
         // Required inputs
-        int vigor;
-        int attunement;
-        int endurance;
-        int vitality;
-        int strength;
-        int dexterity;
-        int intelligence;
-        int faith;
-        int luck;
+        int vigorStat;
+        int attunementStat;
+        int enduranceStat;
+        int vitalityStat;
+        int strengthStat;
+        int dexterityStat;
+        int intelligenceStat;
+        int faithStat;
+        int luckStat;
         
         // Derived stats
         int maxHealth;
@@ -48,6 +49,23 @@ class Person: public GameObject{
         // Age stats
         int lifespan;
         int age;
+
+        // XP
+        int XPvigor;
+        int XPattunement;
+        int XPendurance;
+        int XPvitality;
+        int XPstrength;
+        int XPdexterity;
+        int XPintelligence;
+        int XPfaith;
+        int XPluck;
+
+        int XPLevelMultiplier = 100;
+
+        // Training personality
+        std::string trainingFocus;
+        std::string trainingArea;
 };
 
 #endif

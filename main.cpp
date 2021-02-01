@@ -9,6 +9,7 @@
 #include <string>
 
 #include "common/chroma_texture.h"
+#include "common/enums.h"
 #include "common/food.h"
 #include "common/HUD.h"
 #include "common/person.h"
@@ -28,6 +29,7 @@ SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
 ChromaTexture personTexture;
 ChromaTexture foodTexture;
+ChromaTexture templeTexture;
 
 
 bool init(){
@@ -47,8 +49,8 @@ bool init(){
         }
         else{
             // Create Renderer
-            //gRenderer = SDL_CreateRenderer(gWindow, 01, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-            gRenderer = SDL_CreateRenderer(gWindow, 01, SDL_RENDERER_ACCELERATED);
+            gRenderer = SDL_CreateRenderer(gWindow, 01, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+            //gRenderer = SDL_CreateRenderer(gWindow, 01, SDL_RENDERER_ACCELERATED);
             if (gRenderer == NULL){
                 printf("Renderer could not be created. SDL Error: %s\n", SDL_GetError());
                 success = false;
@@ -88,6 +90,11 @@ bool loadMedia(){
         success = false;
     }
 
+    if (!templeTexture.loadFromFile("images/temple.png", gRenderer)){
+        printf("Failed to load texture image (temple).");
+        success = false;
+    }
+
     return success;
 }
 
@@ -124,8 +131,8 @@ int main(int argc, char* argv[]){
 
             SDL_Point mousePos;
 
-            World world(1000, 100);
-            world.initialize(&personTexture, &foodTexture);
+            World world(1000, 100, 3);
+            world.initialize(&personTexture, &foodTexture, &templeTexture);
 
             HUD hud(gRenderer, &world);
 

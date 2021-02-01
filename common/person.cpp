@@ -14,6 +14,15 @@ uniform_int_distribution<int> lifeSaveDist(1, 10);
 uniform_int_distribution<int> procreateDist(1, 30);
 uniform_int_distribution<int> killDist(1, 5);
 
+// Balanced makes sure each of the stats are equal
+// Neutral will pick a stat to level at random
+// Obsessive will exclusively level the highest stat
+string trainingFocusList[] = {"balanced", "neutral", "obsessive"};
+// Physical stats are vigor, vitality, and strength
+// Neutral (or middle) stats are dexterity, endurance, and luck
+// Mental stats are intelligence, faith, and attunement
+string trainingAreaList[] = {"physical", "neutral", "mental"};
+
 Person::Person(){
     position.x = 0;
     position.y = 0;
@@ -22,18 +31,22 @@ Person::Person(){
 
     target = NULL;
     
-    vigor = statDist(personrd);
-    attunement = statDist(personrd);
-    endurance = statDist(personrd);
-    vitality = statDist(personrd);
-    strength = statDist(personrd);
-    dexterity = statDist(personrd);
-    intelligence = statDist(personrd);
-    faith = statDist(personrd);
-    luck = statDist(personrd);
+    vigorStat = statDist(personrd);
+    attunementStat = statDist(personrd);
+    enduranceStat = statDist(personrd);
+    vitalityStat = statDist(personrd);
+    strengthStat = statDist(personrd);
+    dexterityStat = statDist(personrd);
+    intelligenceStat = statDist(personrd);
+    faithStat = statDist(personrd);
+    luckStat = statDist(personrd);
 
     lifespan = 4800;
     age = 0;
+
+    // Set training personality
+    trainingFocus = trainingFocusList[rand() % 3];
+    trainingArea = trainingAreaList[rand() % 3];
 
     // Update the functional stats
     deriveFromStats();
@@ -49,27 +62,33 @@ Person::Person(Person* parent1, Person* parent2){
 
     target = NULL;
 
-    vigor = (parent1->vigor + parent2->vigor) / 2;
-    attunement = (parent1->attunement + parent2->attunement) / 2;
-    endurance = (parent1->endurance + parent2->endurance) / 2;
-    vitality = (parent1->vitality + parent2->vitality) / 2;
-    strength = (parent1->strength + parent2->strength) / 2;
-    dexterity = (parent1->dexterity + parent2->dexterity) / 2;
-    intelligence = (parent1->intelligence + parent2->intelligence) / 2;
-    faith = (parent1->faith + parent2->faith) / 2;
-    luck = (parent1->luck + parent2->luck) / 2;
+    vigorStat = (parent1->vigorStat + parent2->vigorStat) / 2;
+    attunementStat = (parent1->attunementStat + parent2->attunementStat) / 2;
+    enduranceStat = (parent1->enduranceStat + parent2->enduranceStat) / 2;
+    vitalityStat = (parent1->vitalityStat + parent2->vitalityStat) / 2;
+    strengthStat = (parent1->strengthStat + parent2->strengthStat) / 2;
+    dexterityStat = (parent1->dexterityStat + parent2->dexterityStat) / 2;
+    intelligenceStat = (parent1->intelligenceStat + parent2->intelligenceStat) / 2;
+    faithStat = (parent1->faithStat + parent2->faithStat) / 2;
+    luckStat = (parent1->luckStat + parent2->luckStat) / 2;
 
     lifespan = 4800;
     age = 0;
     image = parent1->image;
-    
+
+    // Set training personality
+    string tempFocusList[] = {parent1->trainingFocus, parent2->trainingFocus};
+    trainingFocus = tempFocusList[rand() % 2];
+    string tempAreaList[] = {parent1->trainingArea, parent2->trainingArea};
+    trainingArea = tempAreaList[rand() % 2];
+
     // Update the functional stats
     deriveFromStats();
     health = maxHealth;
     currentFood = maxFood;
 };
 
-void Person::update(list<Person>& peopleList, list<Food>& foodList, int maxPopulation){
+void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>& templeList, int maxPopulation){
     // Verify target exists
     if ((target != NULL && (target->position.w != 32 || target->position.h != 32)) || target == NULL){
         // Target has died before they got there (or because they got there), or just doesn't exist
@@ -130,9 +149,13 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, int maxPopul
         if (age / 60 >= 18 && procreateDist(personrd) == 1 && peopleList.size() + 1 < maxPopulation){
             task = "procreate";
         }
-        else if (age / 60 >= 18 && age / 60 <= 80 && (strength > intelligence || dexterity > intelligence) && killDist(personrd) == 1){
+        else if (age / 60 >= 18 && age / 60 <= 80 && (strengthStat > intelligenceStat || dexterityStat > intelligenceStat) && killDist(personrd) == 1){
             task = "murder";
         }
+    }
+    // Determine other tasks
+    if (task == "nothing"){
+        task = "train";
     }
 
     // Determine target
@@ -172,7 +195,7 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, int maxPopul
                 }
 
                 // Elligible person is a person with a stats considerably lower than their own
-                if (person.statsCombined() <= this->statsCombined() - intelligence){
+                if (person.statsCombined() <= this->statsCombined() - intelligenceStat){
                     best = &person;
                     break;
                 }
@@ -181,11 +204,113 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, int maxPopul
 
         target = best;
     }
+    else if (target == NULL && task == "train"){
+        // Determine stat that will be trained
+        StatType trainedStat;
+
+        if (trainingFocus == "balanced"){
+            if (trainingArea == "physical"){
+                if (vigorStat <= vitalityStat && vigorStat <= strengthStat){
+                    trainedStat = vigor;
+                }
+                else if (vitalityStat <= vigorStat && vitalityStat <= strengthStat){
+                    trainedStat = vitality;
+                }
+                else{
+                    trainedStat = strength;
+                }
+            }
+            else if (trainingArea == "neutral"){
+                if (dexterityStat <= enduranceStat && dexterityStat <= luckStat){
+                    trainedStat = dexterity;
+                }
+                else if (enduranceStat <= dexterityStat && enduranceStat <= luckStat){
+                    trainedStat = endurance;
+                }
+                else{
+                    trainedStat = luck;
+                }
+            }
+            else if (trainingArea == "mental"){
+                if (intelligenceStat <= faithStat && intelligenceStat <= attunementStat){
+                    trainedStat = intelligence;
+                }
+                else if (faithStat <= intelligenceStat && faithStat <= attunementStat){
+                    trainedStat = faith;
+                }
+                else{
+                    trainedStat = attunement;
+                }
+            }
+        }
+        else if (trainingFocus == "neutral"){
+            if (trainingArea == "physical"){
+                StatType temp[] = {vigor, vitality, strength};
+                trainedStat = temp[rand() % 3];
+            }
+            else if (trainingArea == "neutral"){
+                StatType temp[] = {dexterity, endurance, luck};
+                trainedStat = temp[rand() % 3];
+            }
+            else if (trainingArea == "mental"){
+                StatType temp[] = {intelligence, faith, attunement};
+                trainedStat = temp[rand() % 3];
+            }
+        }
+        else if (trainingFocus == "obsessive"){
+            if (trainingArea == "physical"){
+                if (vigorStat >= vitalityStat && vigorStat >= strengthStat){
+                    trainedStat = vigor;
+                }
+                else if (vitalityStat >= vigorStat && vitalityStat >= strengthStat){
+                    trainedStat = vitality;
+                }
+                else{
+                    trainedStat = strength;
+                }
+            }
+            else if (trainingArea == "neutral"){
+                if (dexterityStat >= enduranceStat && dexterityStat >= luckStat){
+                    trainedStat = dexterity;
+                }
+                else if (enduranceStat >= dexterityStat && enduranceStat >= luckStat){
+                    trainedStat = endurance;
+                }
+                else{
+                    trainedStat = luck;
+                }
+            }
+            else if (trainingArea == "mental"){
+                if (intelligenceStat >= faithStat && intelligenceStat >= attunementStat){
+                    trainedStat = intelligence;
+                }
+                else if (faithStat >= intelligenceStat && faithStat >= attunementStat){
+                    trainedStat = faith;
+                }
+                else{
+                    trainedStat = attunement;
+                }
+            }
+        }
+
+        int closest = 1000000;
+        for (Temple& temple : templeList){
+            if (temple.statType != trainedStat){
+                continue;
+            }
+
+            float distance = sqrtf(pow(temple.position.x - position.x, 2) + pow(temple.position.y - position.y, 2));
+            if (distance < closest){
+                closest = distance;
+                target = &temple;
+            }
+        }
+    }
 
     // Verify target exists and at target
     if (target != NULL){
         float distance = sqrtf(pow(target->position.x - position.x, 2) + pow(target->position.y - position.y, 2));
-        if (distance <= 1){
+        if (distance <= 2){
             if (task == "food"){
                 // Perform task
                 currentFood = maxFood;
@@ -219,6 +344,25 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, int maxPopul
                     target = NULL;
                 }
             }
+            else if (task == "train"){
+                auto other = (Temple*) target;
+                switch (other->statType){
+                    case vigor: vigorStat++; break;
+                    case attunement: attunementStat++; break;
+                    case endurance: enduranceStat++; break;
+                    case vitality: vitalityStat++; break;
+                    case strength: strengthStat++; break;
+                    case dexterity: dexterityStat++; break;
+                    case intelligence: intelligenceStat++; break;
+                    case faith: faithStat++; break;
+                    case luck: luckStat++; break;
+                }
+
+                deriveFromStats();
+
+                task = "nothing";
+                target = NULL;
+            }
 
             return;
         }
@@ -251,17 +395,17 @@ void Person::updatePosition(int targetX, int targetY){
 }
 
 void Person::deriveFromStats(){
-    maxHealth = 200 + (vigor * 30) + (vitality * 2);
-    speed = 1.0 + (endurance / 2.0) + (dexterity / 8.0);
-    damage = 10 + (strength * 20) + (dexterity * 10);
-    defense = (vitality * 15) + (strength * 5);
+    maxHealth = 200 + (vigorStat * 30) + (vitalityStat * 2);
+    speed = 1.0 + (enduranceStat / 2.0) + (dexterityStat / 8.0);
+    damage = 10 + (strengthStat * 20) + (dexterityStat * 10);
+    defense = (vitalityStat * 15) + (strengthStat * 5);
 
-    maxFood = 100.0 + (vitality * 2) + strength;
-    foodDepletionRate = 0.1 + (strength / 40);
+    maxFood = 100.0 + (vitalityStat * 2) + strengthStat;
+    foodDepletionRate = 0.1 + (strengthStat / 40);
 }
 
 int Person::statsCombined(){
-    return vigor + attunement + endurance + vitality + strength + dexterity + intelligence + faith + luck;
+    return vigorStat + attunementStat + enduranceStat + vitalityStat + strengthStat + dexterityStat + intelligenceStat + faithStat + luckStat;
 }
 
 string Person::toString(){

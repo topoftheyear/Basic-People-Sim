@@ -1,6 +1,3 @@
-#include <SDL.h>
-
-#include "chroma_texture.h"
 #include "game_object.h"
 
 #ifndef __FOOD_H_INCLUDED__
