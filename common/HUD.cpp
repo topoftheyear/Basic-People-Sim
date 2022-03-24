@@ -44,11 +44,11 @@ void HUD::render(SDL_Point mousePos, int xOffset, int yOffset){
             addText(s, x, 10 + 24 * 4 + 10 * 4, white);
             s = "Age:" + to_string(person.age / 60) + "/" + to_string(person.lifespan / 60);
             addText(s, x, 10 + 24 * 5 + 10 * 5, white);
-            s = "VIG:" + to_string(person.vigorStat) + "|ATT:" + to_string(person.attunementStat) + "|END:" + to_string(person.enduranceStat);
+            s = "VIG:" + to_string(person.vigorStat.getLevel()) + "|ATT:" + to_string(person.attunementStat.getLevel()) + "|END:" + to_string(person.enduranceStat.getLevel());
             addText(s, x, 10 + 24 * 6 + 10 * 6, white);
-            s = "VIT:" + to_string(person.vitalityStat) + "|STR:" + to_string(person.strengthStat) + "|DEX:" + to_string(person.dexterityStat);
+            s = "VIT:" + to_string(person.vitalityStat.getLevel()) + "|STR:" + to_string(person.strengthStat.getLevel()) + "|DEX:" + to_string(person.dexterityStat.getLevel());
             addText(s, x, 10 + 24 * 7 + 10 * 7, white);
-            s = "INT:" + to_string(person.intelligenceStat) + "|FTH:" + to_string(person.faithStat) + "|LCK:" + to_string(person.luckStat);
+            s = "INT:" + to_string(person.intelligenceStat.getLevel()) + "|FTH:" + to_string(person.faithStat.getLevel()) + "|LCK:" + to_string(person.luckStat.getLevel());
             addText(s, x, 10 + 24 * 8 + 10 * 8, white);
             s = person.trainingFocus + " " + person.trainingArea;
             addText(s, x, 10 + 24 * 9 + 10 * 9, white);

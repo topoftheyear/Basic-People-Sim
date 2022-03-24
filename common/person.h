@@ -4,6 +4,7 @@
 
 #include "chroma_texture.h"
 #include "game_object.h"
+#include "stat.h"
 #include "temple.h"
 
 #ifndef __PERSON_H_INCLUDED__
@@ -24,15 +25,15 @@ class Person: public GameObject{
         std::string task;   // The task that will get carried out at the target
 
         // Required inputs
-        int vigorStat;
-        int attunementStat;
-        int enduranceStat;
-        int vitalityStat;
-        int strengthStat;
-        int dexterityStat;
-        int intelligenceStat;
-        int faithStat;
-        int luckStat;
+        Stat vigorStat;
+        Stat attunementStat;
+        Stat enduranceStat;
+        Stat vitalityStat;
+        Stat strengthStat;
+        Stat dexterityStat;
+        Stat intelligenceStat;
+        Stat faithStat;
+        Stat luckStat;
         
         // Derived stats
         int maxHealth;

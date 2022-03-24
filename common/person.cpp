@@ -4,6 +4,7 @@
 
 #include "food.h"
 #include "person.h"
+#include "stat.h"
 
 using namespace std;
 
@@ -31,15 +32,15 @@ Person::Person(){
 
     target = NULL;
     
-    vigorStat = statDist(personrd);
-    attunementStat = statDist(personrd);
-    enduranceStat = statDist(personrd);
-    vitalityStat = statDist(personrd);
-    strengthStat = statDist(personrd);
-    dexterityStat = statDist(personrd);
-    intelligenceStat = statDist(personrd);
-    faithStat = statDist(personrd);
-    luckStat = statDist(personrd);
+    vigorStat = Stat(statDist(personrd));
+    attunementStat = Stat(statDist(personrd));
+    enduranceStat = Stat(statDist(personrd));
+    vitalityStat = Stat(statDist(personrd));
+    strengthStat = Stat(statDist(personrd));
+    dexterityStat = Stat(statDist(personrd));
+    intelligenceStat = Stat(statDist(personrd));
+    faithStat = Stat(statDist(personrd));
+    luckStat = Stat(statDist(personrd));
 
     lifespan = 4800;
     age = 0;
@@ -62,15 +63,15 @@ Person::Person(Person* parent1, Person* parent2){
 
     target = NULL;
 
-    vigorStat = (parent1->vigorStat + parent2->vigorStat) / 2;
-    attunementStat = (parent1->attunementStat + parent2->attunementStat) / 2;
-    enduranceStat = (parent1->enduranceStat + parent2->enduranceStat) / 2;
-    vitalityStat = (parent1->vitalityStat + parent2->vitalityStat) / 2;
-    strengthStat = (parent1->strengthStat + parent2->strengthStat) / 2;
-    dexterityStat = (parent1->dexterityStat + parent2->dexterityStat) / 2;
-    intelligenceStat = (parent1->intelligenceStat + parent2->intelligenceStat) / 2;
-    faithStat = (parent1->faithStat + parent2->faithStat) / 2;
-    luckStat = (parent1->luckStat + parent2->luckStat) / 2;
+    vigorStat = Stat((parent1->vigorStat.getLevel() + parent2->vigorStat.getLevel()) / 2);
+    attunementStat = Stat((parent1->attunementStat.getLevel() + parent2->attunementStat.getLevel()) / 2);
+    enduranceStat = Stat((parent1->enduranceStat.getLevel() + parent2->enduranceStat.getLevel()) / 2);
+    vitalityStat = Stat((parent1->vitalityStat.getLevel() + parent2->vitalityStat.getLevel()) / 2);
+    strengthStat = Stat((parent1->strengthStat.getLevel() + parent2->strengthStat.getLevel()) / 2);
+    dexterityStat = Stat((parent1->dexterityStat.getLevel() + parent2->dexterityStat.getLevel()) / 2);
+    intelligenceStat = Stat((parent1->intelligenceStat.getLevel() + parent2->intelligenceStat.getLevel()) / 2);
+    faithStat = Stat((parent1->faithStat.getLevel() + parent2->faithStat.getLevel()) / 2);
+    luckStat = Stat((parent1->luckStat.getLevel() + parent2->luckStat.getLevel()) / 2);
 
     lifespan = 4800;
     age = 0;
@@ -149,7 +150,7 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
         if (age / 60 >= 18 && procreateDist(personrd) == 1 && peopleList.size() + 1 < maxPopulation){
             task = "procreate";
         }
-        else if (age / 60 >= 18 && age / 60 <= 80 && (strengthStat > intelligenceStat || dexterityStat > intelligenceStat) && killDist(personrd) == 1){
+        else if (age / 60 >= 18 && age / 60 <= 80 && (strengthStat.getLevel() > intelligenceStat.getLevel() || dexterityStat.getLevel() > intelligenceStat.getLevel()) && killDist(personrd) == 1){
             task = "murder";
         }
     }
@@ -195,7 +196,7 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
                 }
 
                 // Elligible person is a person with a stats considerably lower than their own
-                if (person.statsCombined() <= this->statsCombined() - intelligenceStat){
+                if (person.statsCombined() <= this->statsCombined() - intelligenceStat.getLevel()){
                     best = &person;
                     break;
                 }
@@ -210,10 +211,10 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
 
         if (trainingFocus == "balanced"){
             if (trainingArea == "physical"){
-                if (vigorStat <= vitalityStat && vigorStat <= strengthStat){
+                if (vigorStat.getLevel() <= vitalityStat.getLevel() && vigorStat.getLevel() <= strengthStat.getLevel()){
                     trainedStat = vigor;
                 }
-                else if (vitalityStat <= vigorStat && vitalityStat <= strengthStat){
+                else if (vitalityStat.getLevel() <= vigorStat.getLevel() && vitalityStat.getLevel() <= strengthStat.getLevel()){
                     trainedStat = vitality;
                 }
                 else{
@@ -221,10 +222,10 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
                 }
             }
             else if (trainingArea == "neutral"){
-                if (dexterityStat <= enduranceStat && dexterityStat <= luckStat){
+                if (dexterityStat.getLevel() <= enduranceStat.getLevel() && dexterityStat.getLevel() <= luckStat.getLevel()){
                     trainedStat = dexterity;
                 }
-                else if (enduranceStat <= dexterityStat && enduranceStat <= luckStat){
+                else if (enduranceStat.getLevel() <= dexterityStat.getLevel() && enduranceStat.getLevel() <= luckStat.getLevel()){
                     trainedStat = endurance;
                 }
                 else{
@@ -232,10 +233,10 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
                 }
             }
             else if (trainingArea == "mental"){
-                if (intelligenceStat <= faithStat && intelligenceStat <= attunementStat){
+                if (intelligenceStat.getLevel() <= faithStat.getLevel() && intelligenceStat.getLevel() <= attunementStat.getLevel()){
                     trainedStat = intelligence;
                 }
-                else if (faithStat <= intelligenceStat && faithStat <= attunementStat){
+                else if (faithStat.getLevel() <= intelligenceStat.getLevel() && faithStat.getLevel() <= attunementStat.getLevel()){
                     trainedStat = faith;
                 }
                 else{
@@ -259,10 +260,10 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
         }
         else if (trainingFocus == "obsessive"){
             if (trainingArea == "physical"){
-                if (vigorStat >= vitalityStat && vigorStat >= strengthStat){
+                if (vigorStat.getLevel() >= vitalityStat.getLevel() && vigorStat.getLevel() >= strengthStat.getLevel()){
                     trainedStat = vigor;
                 }
-                else if (vitalityStat >= vigorStat && vitalityStat >= strengthStat){
+                else if (vitalityStat.getLevel() >= vigorStat.getLevel() && vitalityStat.getLevel() >= strengthStat.getLevel()){
                     trainedStat = vitality;
                 }
                 else{
@@ -270,10 +271,10 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
                 }
             }
             else if (trainingArea == "neutral"){
-                if (dexterityStat >= enduranceStat && dexterityStat >= luckStat){
+                if (dexterityStat.getLevel() >= enduranceStat.getLevel() && dexterityStat.getLevel() >= luckStat.getLevel()){
                     trainedStat = dexterity;
                 }
-                else if (enduranceStat >= dexterityStat && enduranceStat >= luckStat){
+                else if (enduranceStat.getLevel() >= dexterityStat.getLevel() && enduranceStat.getLevel() >= luckStat.getLevel()){
                     trainedStat = endurance;
                 }
                 else{
@@ -281,10 +282,10 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
                 }
             }
             else if (trainingArea == "mental"){
-                if (intelligenceStat >= faithStat && intelligenceStat >= attunementStat){
+                if (intelligenceStat.getLevel() >= faithStat.getLevel() && intelligenceStat.getLevel() >= attunementStat.getLevel()){
                     trainedStat = intelligence;
                 }
-                else if (faithStat >= intelligenceStat && faithStat >= attunementStat){
+                else if (faithStat.getLevel() >= intelligenceStat.getLevel() && faithStat.getLevel() >= attunementStat.getLevel()){
                     trainedStat = faith;
                 }
                 else{
@@ -347,15 +348,15 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
             else if (task == "train"){
                 auto other = (Temple*) target;
                 switch (other->statType){
-                    case vigor: vigorStat++; break;
-                    case attunement: attunementStat++; break;
-                    case endurance: enduranceStat++; break;
-                    case vitality: vitalityStat++; break;
-                    case strength: strengthStat++; break;
-                    case dexterity: dexterityStat++; break;
-                    case intelligence: intelligenceStat++; break;
-                    case faith: faithStat++; break;
-                    case luck: luckStat++; break;
+                    case vigor: vigorStat.addXP(1); break;
+                    case attunement: attunementStat.addXP(1); break;
+                    case endurance: enduranceStat.addXP(1); break;
+                    case vitality: vitalityStat.addXP(1); break;
+                    case strength: strengthStat.addXP(1); break;
+                    case dexterity: dexterityStat.addXP(1); break;
+                    case intelligence: intelligenceStat.addXP(1); break;
+                    case faith: faithStat.addXP(1); break;
+                    case luck: luckStat.addXP(1); break;
                 }
 
                 deriveFromStats();
@@ -395,17 +396,17 @@ void Person::updatePosition(int targetX, int targetY){
 }
 
 void Person::deriveFromStats(){
-    maxHealth = 200 + (vigorStat * 30) + (vitalityStat * 2);
-    speed = 1.0 + (enduranceStat / 2.0) + (dexterityStat / 8.0);
-    damage = 10 + (strengthStat * 20) + (dexterityStat * 10);
-    defense = (vitalityStat * 15) + (strengthStat * 5);
+    maxHealth = 200 + (vigorStat.getLevel() * 30) + (vitalityStat.getLevel() * 2);
+    speed = 1.0 + (enduranceStat.getLevel() / 2.0) + (dexterityStat.getLevel() / 8.0);
+    damage = 10 + (strengthStat.getLevel() * 20) + (dexterityStat.getLevel() * 10);
+    defense = (vitalityStat.getLevel() * 15) + (strengthStat.getLevel() * 5);
 
-    maxFood = 100.0 + (vitalityStat * 2) + strengthStat;
-    foodDepletionRate = 0.1 + (strengthStat / 40);
+    maxFood = 100.0 + (vitalityStat.getLevel() * 2) + strengthStat.getLevel();
+    foodDepletionRate = 0.1 + (strengthStat.getLevel() / 40);
 }
 
 int Person::statsCombined(){
-    return vigorStat + attunementStat + enduranceStat + vitalityStat + strengthStat + dexterityStat + intelligenceStat + faithStat + luckStat;
+    return vigorStat.getLevel() + attunementStat.getLevel() + enduranceStat.getLevel() + vitalityStat.getLevel() + strengthStat.getLevel() + dexterityStat.getLevel() + intelligenceStat.getLevel() + faithStat.getLevel() + luckStat.getLevel();
 }
 
 string Person::toString(){

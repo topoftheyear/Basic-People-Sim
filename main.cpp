@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include <list>
 #include <random>
@@ -142,6 +143,8 @@ int main(int argc, char* argv[]){
             bool paused = false;
 
             while (!quit){
+                chrono::high_resolution_clock::time_point startTime = chrono::high_resolution_clock::now();
+                
                 while (SDL_PollEvent(&e) != 0){
                     switch (e.type){
                         case SDL_QUIT: quit = true; break;
@@ -193,9 +196,10 @@ int main(int argc, char* argv[]){
                 hud.render(mousePos, xOffset, yOffset);
 
                 // Calculate FPS
-                float avgFPS = countedFrames / (fpsTimer.getTicks() / 1000.f);
+                chrono::high_resolution_clock::time_point endTime = chrono::high_resolution_clock::now();
+                chrono::duration<float, std::milli> timeSpan = endTime - startTime;
                 if (world.age % 60 == 0){
-                    cout << "Average FPS: " << avgFPS << endl;
+                    cout << "Current FPS: " << 1 / timeSpan.count() * 1000 << endl;
                 }
 
                 SDL_RenderPresent(gRenderer);
