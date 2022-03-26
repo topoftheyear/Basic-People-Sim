@@ -1,6 +1,7 @@
 #include <iostream>
 #include <math.h>
 #include <random>
+#include <vector>
 
 #include "food.h"
 #include "person.h"
@@ -11,7 +12,7 @@ using namespace std;
 random_device personrd;
 uniform_int_distribution<int> personMoveDist(-1, 1);
 uniform_int_distribution<int> statDist(1, 15);
-uniform_int_distribution<int> lifeSaveDist(1, 10);
+uniform_real_distribution<double> lifeSaveDist(0, 1);
 uniform_int_distribution<int> procreateDist(1, 30);
 uniform_int_distribution<int> killDist(1, 5);
 
@@ -100,17 +101,12 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
     // Update age
     age++;
     if (age > lifespan && age % 60 == 0){
-        // Each person gets their luck stat number of throws to see if they get to live
-        // They require a single success at 10% odds to succeed
-        bool live = false;
-        for (int x = 1; x < luck; ++x){
-            if (lifeSaveDist(personrd) == 10){
-                live = true;
-                break;
-            }
-        }
+        // Each person has their luck stat put through this formula then compared against a random number
+        bool live = lifeSaveDist(personrd) < log((double)luckStat.getLevel() + 1.0) / 8.0;
+
         if (!live){
             health = 0;
+            dead = true;
             return;
         }
     }
@@ -131,11 +127,23 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
     if (currentFood <= maxFood / 4 && task != "food"){
         task = "food";
         
+        // Determine if it will use smart selection
+        // Won't take food from spot if it will result in its destruction
+        bool smartSelection = (float)intelligenceStat.getLevel() / (float)this->statsCombined() > 0.11;
+
+        float foodNeeded = maxFood - currentFood;
+
         // Determine closest food
         Food* closest = NULL;
         float closestDistance = 1000000;
         for (Food& food : foodList){
             float distance = sqrtf(pow(food.position.x - position.x, 2) + pow(food.position.y - position.y, 2));
+            
+            // Smart selection short stop
+            if (smartSelection && food.currentFood < foodNeeded){
+                continue;
+            }
+            
             if (distance < closestDistance){
                 closest = &food;
                 closestDistance = distance;
@@ -154,9 +162,67 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
             task = "murder";
         }
     }
+
     // Determine other tasks
     if (task == "nothing"){
-        task = "train";
+        vector<int> statDist = {
+            vigorStat.getLevel(),
+            attunementStat.getLevel(),
+            enduranceStat.getLevel(),
+            vitalityStat.getLevel(),
+            strengthStat.getLevel(),
+            dexterityStat.getLevel(),
+            intelligenceStat.getLevel(),
+            faithStat.getLevel(),
+            luckStat.getLevel(),
+            statsCombined() / 2,
+        };
+        
+        discrete_distribution<int> d(statDist.begin(), statDist.end());
+        switch(d(personrd)){
+            case 0: 
+                // Vigor
+                task = "train";
+                break;
+            case 1: 
+                // Attunement
+                task = "train";
+                break;
+            case 2: 
+                // Endurance
+                task = "train";
+                break;
+            case 3: 
+                // Vitality
+                task = "train";
+                break;
+            case 4: 
+                // Strength
+                task = "train";
+                break;
+            case 5: 
+                // Dexterity
+                task = "train";
+                break;
+            case 6: 
+                // Intelligence
+                task = "train";
+                break;
+            case 7: 
+                // Faith
+                task = "train";
+                break;
+            case 8: 
+                // Luck
+                task = "train";
+                break;
+            case 9: 
+                // Train
+                task = "train";
+                break;
+            default: 
+                task = "train";
+        }
     }
 
     // Determine target
@@ -314,6 +380,9 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
         if (distance <= 2){
             if (task == "food"){
                 // Perform task
+                auto other = (Food*) target;
+                float foodGained = min(maxFood - currentFood, other->currentFood);
+                other->removeFood(foodGained);
                 currentFood = maxFood;
 
                 // Tasks reset
@@ -377,6 +446,11 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
     else{
         updatePosition(personMoveDist(personrd) * speed + position.x, personMoveDist(personrd) * speed + position.y);
     }
+
+    // Flag dead if no health remaining
+    if (health <= 0){
+        dead = true;
+    }
 }
 
 void Person::updatePosition(int targetX, int targetY){
@@ -397,7 +471,7 @@ void Person::updatePosition(int targetX, int targetY){
 
 void Person::deriveFromStats(){
     maxHealth = 200 + (vigorStat.getLevel() * 30) + (vitalityStat.getLevel() * 2);
-    speed = 1.0 + (enduranceStat.getLevel() / 2.0) + (dexterityStat.getLevel() / 8.0);
+    speed = 1.0 + (enduranceStat.getLevel() / 4.0) + (dexterityStat.getLevel() / 16.0);
     damage = 10 + (strengthStat.getLevel() * 20) + (dexterityStat.getLevel() * 10);
     defense = (vitalityStat.getLevel() * 15) + (strengthStat.getLevel() * 5);
 

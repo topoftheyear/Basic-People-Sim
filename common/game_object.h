@@ -13,6 +13,7 @@ class GameObject{
         ChromaTexture* image;
 
         int id;
+        bool dead;
 
         bool operator == (const GameObject& p) const { return id == p.id; }
         bool operator != (const GameObject& p) const { return !operator==(p); }

@@ -10,8 +10,21 @@ Food::Food(){
     position.y = foodPosDist(foodrd);
     position.w = 32;
     position.h = 32;
+
+    age = 0;
+    currentFood = 0.0f;
 }
 
 void Food::update(){
-    // Does nothing for now
+    // Flag food if none remain
+    if (currentFood <= 0 && age > 0){
+        dead = true;
+    }
+    
+    age++;
+    currentFood += 1.0f;
+}
+
+void Food::removeFood(float amount){
+    currentFood = std::max(0.0f, currentFood - amount);
 }

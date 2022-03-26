@@ -7,7 +7,11 @@ class Food: public GameObject{
     public:
         Food();
 
+        int age;
+        float currentFood;
+
         void update();
+        void removeFood(float);
 };
 
 #endif

@@ -14,6 +14,7 @@ class World{
         void initialize(ChromaTexture*, ChromaTexture*, ChromaTexture*);
         void update();
         void render(SDL_Renderer*, int, int);
+        bool onScreen(int, int, int, int);
 
         std::list<Person> peopleList;
         std::list<Food> foodList;

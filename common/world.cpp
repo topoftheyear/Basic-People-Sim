@@ -57,22 +57,31 @@ void World::update(){
     age++;
     
     // Update each person
-    std::list<Person>::iterator i = peopleList.begin();
-    while (i != peopleList.end()){
-        auto person = (i);
+    std::list<Person>::iterator p = peopleList.begin();
+    while (p != peopleList.end()){
+        auto person = (p);
         person->update(peopleList, foodList, templeList, maxPopulation);
 
         // Check for death of each person
-        if (person->health == 0){
-            i = peopleList.erase(i);
+        if (person->dead){
+            p = peopleList.erase(p);
         }
 
-        ++i;
+        ++p;
     }
     
     // Update each food
-    for (Food &food : foodList){
-        food.update();
+    std::list<Food>::iterator f = foodList.begin();
+    while (f != foodList.end()){
+        auto food = (f);
+        food->update();
+
+        // Check for expiry of each farm
+        if (food->dead){
+            f = foodList.erase(f);
+        }
+
+        ++f;
     }
 
     // Update each temple
@@ -84,18 +93,40 @@ void World::update(){
 void World::render(SDL_Renderer* gRenderer, int xOffset, int yOffset){
     // Render each food
     for (Food &food : foodList){
-        food.image->render(food.position.x + xOffset, food.position.y + yOffset, gRenderer);
+        int tempX = food.position.x + xOffset;
+        int tempY = food.position.y + yOffset;
+        if (onScreen(tempX, tempY, 1920, 1080)){
+            food.image->render(tempX, tempY, gRenderer);
+        }
     }
 
     // Render each temple
     for (Temple &temple : templeList){
-        temple.image->render(temple.position.x + xOffset, temple.position.y + yOffset, gRenderer);
+        int tempX = temple.position.x + xOffset;
+        int tempY = temple.position.y + yOffset;
+        if (onScreen(tempX, tempY, 1920, 1080)){
+            temple.image->render(tempX, tempY, gRenderer);
+        }
     }
 
     // Render each person
     for (Person &person : peopleList){
-        person.image->render(person.position.x + xOffset, person.position.y + yOffset, gRenderer);
+        int tempX = person.position.x + xOffset;
+        int tempY = person.position.y + yOffset;
+        if (onScreen(tempX, tempY, 1920, 1080)){
+            person.image->render(tempX, tempY, gRenderer);
+        }
     }
 
     
+}
+
+bool World::onScreen(int x, int y, int width, int height) {
+    bool visible = false;
+
+    if (-100 < x && x < width + 100 && -100 < y && y < height + 100) {
+        visible = true;
+    }
+
+    return visible;
 }
