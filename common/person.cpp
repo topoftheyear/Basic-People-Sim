@@ -32,6 +32,7 @@ Person::Person(){
     position.h = 32;
 
     target = NULL;
+    task = "nothing";
     
     vigorStat = Stat(statDist(personrd));
     attunementStat = Stat(statDist(personrd));
@@ -63,6 +64,7 @@ Person::Person(Person* parent1, Person* parent2){
     position.h = 32;
 
     target = NULL;
+    task = "nothing";
 
     vigorStat = Stat((parent1->vigorStat.getLevel() + parent2->vigorStat.getLevel()) / 2);
     attunementStat = Stat((parent1->attunementStat.getLevel() + parent2->attunementStat.getLevel()) / 2);
@@ -92,7 +94,7 @@ Person::Person(Person* parent1, Person* parent2){
 
 void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>& templeList, int maxPopulation){
     // Verify target exists
-    if ((target != NULL && (target->position.w != 32 || target->position.h != 32)) || target == NULL){
+    if (target != NULL && target->dead){
         // Target has died before they got there (or because they got there), or just doesn't exist
         task = "nothing";
         target = NULL;
@@ -135,9 +137,9 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
 
         // Determine closest food
         Food* closest = NULL;
-        float closestDistance = 1000000;
+        float closestDistance = 1000000000;
         for (Food& food : foodList){
-            float distance = sqrtf(pow(food.position.x - position.x, 2) + pow(food.position.y - position.y, 2));
+            float distance = pow(food.position.x - position.x, 2) + pow(food.position.y - position.y, 2);
             
             // Smart selection short stop
             if (smartSelection && food.currentFood < foodNeeded){
@@ -154,16 +156,16 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
     }
 
     // Determine tasks that require another person
-    if (task == "nothing" && target == NULL && age % 60 == 0){
+    /*if (task == "nothing" && target == NULL && age % 60 == 0){
         if (age / 60 >= 18 && procreateDist(personrd) == 1 && peopleList.size() + 1 < maxPopulation){
             task = "procreate";
         }
         else if (age / 60 >= 18 && age / 60 <= 80 && (strengthStat.getLevel() > intelligenceStat.getLevel() || dexterityStat.getLevel() > intelligenceStat.getLevel()) && killDist(personrd) == 1){
             task = "murder";
         }
-    }
+    }*/
 
-    // Determine other tasks
+    // Determine tasks
     if (task == "nothing"){
         vector<int> statDist = {
             vigorStat.getLevel(),
@@ -178,14 +180,19 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
             statsCombined() / 2,
         };
         
+        task = "train";
         discrete_distribution<int> d(statDist.begin(), statDist.end());
         switch(d(personrd)){
             case 0: 
                 // Vigor
-                task = "train";
+                // Procreate
+                if (age / 60 >= 18 && peopleList.size() + 1 <= maxPopulation){
+                    task = "procreate";
+                }
                 break;
             case 1: 
                 // Attunement
+                // Upgrade food
                 task = "train";
                 break;
             case 2: 
@@ -195,10 +202,17 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
             case 3: 
                 // Vitality
                 task = "train";
+                // Procreate
+                if (age / 60 >= 18 && peopleList.size() + 1 <= maxPopulation){
+                    task = "procreate";
+                }
                 break;
             case 4: 
                 // Strength
-                task = "train";
+                // Murder
+                if (age / 60 >= 18 && age / 60 < 60 && strengthStat.getLevel() > intelligenceStat.getLevel()){
+                    task = "murder";
+                }
                 break;
             case 5: 
                 // Dexterity
@@ -206,6 +220,7 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
                 break;
             case 6: 
                 // Intelligence
+                // Create food
                 task = "train";
                 break;
             case 7: 
@@ -220,8 +235,6 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
                 // Train
                 task = "train";
                 break;
-            default: 
-                task = "train";
         }
     }
 
@@ -416,22 +429,63 @@ void Person::update(list<Person>& peopleList, list<Food>& foodList, list<Temple>
             }
             else if (task == "train"){
                 auto other = (Temple*) target;
+                int before = 0;
+                int after = 0;
                 switch (other->statType){
-                    case vigor: vigorStat.addXP(1); break;
-                    case attunement: attunementStat.addXP(1); break;
-                    case endurance: enduranceStat.addXP(1); break;
-                    case vitality: vitalityStat.addXP(1); break;
-                    case strength: strengthStat.addXP(1); break;
-                    case dexterity: dexterityStat.addXP(1); break;
-                    case intelligence: intelligenceStat.addXP(1); break;
-                    case faith: faithStat.addXP(1); break;
-                    case luck: luckStat.addXP(1); break;
+                    case vigor: 
+                        before = vigorStat.getLevel();
+                        vigorStat.addXP(1);
+                        after = vigorStat.getLevel();
+                        break;
+                    case attunement: 
+                        before = attunementStat.getLevel();
+                        attunementStat.addXP(1);
+                        after = attunementStat.getLevel();
+                        break;
+                    case endurance: 
+                        before = enduranceStat.getLevel();
+                        enduranceStat.addXP(1);
+                        after = enduranceStat.getLevel();
+                        break;
+                    case vitality: 
+                        before = vitalityStat.getLevel();
+                        vitalityStat.addXP(1);
+                        after = vitalityStat.getLevel();
+                        break;
+                    case strength: 
+                        before = strengthStat.getLevel();
+                        strengthStat.addXP(1);
+                        after = strengthStat.getLevel();
+                        break;
+                    case dexterity: 
+                        before = dexterityStat.getLevel();
+                        dexterityStat.addXP(1);
+                        after = dexterityStat.getLevel();
+                        break;
+                    case intelligence: 
+                        before = intelligenceStat.getLevel();
+                        intelligenceStat.addXP(1);
+                        after = intelligenceStat.getLevel();
+                        break;
+                    case faith: 
+                        before = faithStat.getLevel();
+                        faithStat.addXP(1);
+                        after = faithStat.getLevel();
+                        break;
+                    case luck: 
+                        before = luckStat.getLevel();
+                        luckStat.addXP(1);
+                        after = luckStat.getLevel();
+                        break;
                 }
 
                 deriveFromStats();
 
-                task = "nothing";
-                target = NULL;
+                // Only reset the task if the level has increased
+                if (after > before){
+                    task = "nothing";
+                    target = NULL;
+                }
             }
 
             return;
@@ -471,12 +525,12 @@ void Person::updatePosition(int targetX, int targetY){
 
 void Person::deriveFromStats(){
     maxHealth = 200 + (vigorStat.getLevel() * 30) + (vitalityStat.getLevel() * 2);
-    speed = 1.0 + (enduranceStat.getLevel() / 4.0) + (dexterityStat.getLevel() / 16.0);
+    speed = 2.0 + (enduranceStat.getLevel() / 8.0) + (dexterityStat.getLevel() / 32.0);
     damage = 10 + (strengthStat.getLevel() * 20) + (dexterityStat.getLevel() * 10);
     defense = (vitalityStat.getLevel() * 15) + (strengthStat.getLevel() * 5);
 
-    maxFood = 100.0 + (vitalityStat.getLevel() * 2) + strengthStat.getLevel();
-    foodDepletionRate = 0.1 + (strengthStat.getLevel() / 40);
+    maxFood = 100.0 + (vitalityStat.getLevel() / 4.0) + (strengthStat.getLevel() / 8.0);
+    foodDepletionRate = 0.025 + (strengthStat.getLevel() / 40);
 }
 
 int Person::statsCombined(){

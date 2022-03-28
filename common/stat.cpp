@@ -17,7 +17,7 @@ void Stat::addXP(int amountToAdd){
 
 	if (currentXP >= XPToNextLevel){
 		level++;
-		currentXP -= XPToNextLevel;
+		currentXP = 0;
 		XPToNextLevel = level * 3;
 	}
 }

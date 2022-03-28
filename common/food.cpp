@@ -1,6 +1,7 @@
 #include <random>
 
 #include "food.h"
+#include "stat.h"
 
 std::random_device foodrd;
 std::uniform_int_distribution<int> foodPosDist(-3000, 3000);
@@ -13,6 +14,8 @@ Food::Food(){
 
     age = 0;
     currentFood = 0.0f;
+    maxFood = 5000.0f;
+    stat = Stat(1);
 }
 
 void Food::update(){
@@ -22,7 +25,8 @@ void Food::update(){
     }
     
     age++;
-    currentFood += 1.0f;
+    currentFood += 5000.0f;//2 * log(stat.getLevel() + 1);
+    currentFood = std::min(currentFood, maxFood);
 }
 
 void Food::removeFood(float amount){

@@ -27,9 +27,17 @@ void HUD::render(SDL_Point mousePos, int xOffset, int yOffset){
     s = "population: " + to_string(world->peopleList.size());
     addText(s, 10, 10 + 24 * 1 + 10 * 1, white);
 
-    // Display stats of person currently hovered over
+    // Display stats of object currently hovered over
+    bool hover = false;
+    
     for (Person &person : world->peopleList){
+        if (hover){
+            break;
+        }
+        
         if (SDL_PointInRect(&mousePos, &person.position)){
+            hover = true;
+            
             int x = 1100;
             // Display relevant information
             s = "Person:" + to_string(person.id);
@@ -52,8 +60,47 @@ void HUD::render(SDL_Point mousePos, int xOffset, int yOffset){
             addText(s, x, 10 + 24 * 8 + 10 * 8, white);
             s = person.trainingFocus + " " + person.trainingArea;
             addText(s, x, 10 + 24 * 9 + 10 * 9, white);
+            s = "Task:" + person.task;
+            if (person.target != NULL) s += " Target:" + to_string(person.target->id);
+            addText(s, x, 10 + 24 * 10 + 10 * 10, white);
+        }
+    }
 
+    for (Food &food : world->foodList){
+        if (hover){
             break;
+        }
+        
+        if (SDL_PointInRect(&mousePos, &food.position)){
+            hover = true;
+            
+            int x = 1100;
+            // Display relevant information
+            s = "Food:" + to_string(food.id);
+            addText(s, x, 10, white);
+            s = "Age:" + to_string(food.age / 60);
+            addText(s, x, 10 + 24 * 1 + 10 * 1, white);
+            s = "Food:" + to_string(food.currentFood);
+            addText(s, x, 10 + 24 * 2 + 10 * 2, white);
+            s = "Level:" + to_string(food.stat.getLevel());
+            addText(s, x, 10 + 24 * 3 + 10 * 3, white);
+        }
+    }
+
+    for (Temple &temple : world->templeList){
+        if (hover){
+            break;
+        }
+        
+        if (SDL_PointInRect(&mousePos, &temple.position)){
+            hover = true;
+            
+            int x = 1100;
+            // Display relevant information
+            s = "Temple:" + to_string(temple.id);
+            addText(s, x, 10, white);
+            s = "Type:" + to_string(temple.statType);
+            addText(s, x, 10 + 24 * 1 + 10 * 1, white);
         }
     }
 
